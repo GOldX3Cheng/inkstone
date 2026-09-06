@@ -221,6 +221,7 @@ export const ZH_CN_MESSAGES = {
     "common.save": "保存",
     "common.save_failed": "保存失败",
     "common.search_notes_or_run_a_command": "搜索笔记、执行命令",
+    "shell.search": "搜索",
     "common.settings": "设置",
     "common.strikethrough": "删除线",
     "common.tabs": "标签页",

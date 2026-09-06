@@ -220,6 +220,7 @@ export const EN_US_MESSAGES = {
     "common.save": "Save",
     "common.save_failed": "Save failed",
     "common.search_notes_or_run_a_command": "Search notes or run a command",
+    "shell.search": "Search",
     "common.settings": "Settings",
     "common.strikethrough": "Strikethrough",
     "common.tabs": "Tabs",

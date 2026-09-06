@@ -1,10 +1,11 @@
 import { lazy, Suspense, useEffect, useRef } from 'react';
-import { Eye, FileText, ListTree, PencilLine } from 'lucide-react';
+import { Eye, FileText, ListTree, PanelLeft, PencilLine } from 'lucide-react';
 import { cn } from '../../lib/cn';
 import { registerAll } from '../../lib/hotkeys';
 import { useBreakpoint } from '../../lib/hooks';
 import { useSyncEngine } from '../../lib/sync';
 import { Drawer } from '../../components/overlay';
+import { IconButton } from '../../components/primitives';
 import { InlineErrorBoundary } from '../../components/ErrorBoundary';
 import { EditorSkeleton } from '../../components/feedback';
 import { PANEL_WIDTHS, useUi } from '../../store/ui';
@@ -13,12 +14,13 @@ import { useSession } from '../../store/session';
 import { useUpdate } from '../../store/update';
 import { Sidebar } from '../sidebar/Sidebar';
 import { NoteList } from '../list/NoteList';
-import { FloatingSearch } from './FloatingSearch';
+import { SearchButton } from './SearchButton';
 import { Resizer, SplitResizer } from './Resizer';
 import { t } from "../../lib/i18n";
+import { SettingsPanel } from '../settings/SettingsPanel';
+import { scheduleSettingsWarmup } from '../settings/sections';
 const Workspace = lazy(() => import('../workspace/Workspace').then((m) => ({ default: m.Workspace })));
 const CommandPalette = lazy(() => import('../command/CommandPalette').then((m) => ({ default: m.CommandPalette })));
-const SettingsPanel = lazy(() => import('../settings/SettingsPanel').then((m) => ({ default: m.SettingsPanel })));
 const ShortcutsPanel = lazy(() => import('../command/ShortcutsPanel').then((m) => ({ default: m.ShortcutsPanel })));
 const GraphPanel = lazy(() => import('../graph/GraphPanel').then((m) => ({ default: m.GraphPanel })));
 const SharePanel = lazy(() => import('../share/SharePanel').then((m) => ({ default: m.SharePanel })));
@@ -28,6 +30,8 @@ const UpdateDialog = lazy(() => import('../update/UpdateDialog').then((m) => ({ 
 export function AppShell() {
     const breakpoint = useBreakpoint();
     const role = useSession((s) => s.user?.role);
+    const userId = useSession((s) => s.user?.id);
+    useEffect(() => scheduleSettingsWarmup(), [userId]);
     const checkForUpdates = useUpdate((s) => s.check);
     useSyncEngine();
     useGlobalHotkeys();
@@ -78,8 +82,12 @@ export function AppShell() {
     const effectiveWorkspaceSplitRatio = workspaceSplitRatio ?? 0.5;
     if (isMobile)
         return <MobileShell />;
-    return (<div className="relative flex h-full min-h-0 overflow-hidden bg-[var(--bg-base)]">
-      <div className="flex min-w-0 flex-1">
+    return (<div className="relative flex h-full min-h-0 flex-col overflow-hidden bg-[var(--bg-base)]">
+      {isTablet && (<div className="flex h-11 shrink-0 items-center gap-3 border-b border-[var(--border-subtle)] bg-[var(--bg-sunken)] px-3">
+        <IconButton label={t('common.navigation')} onClick={() => toggleNavDrawer(true)}><PanelLeft size={16}/></IconButton>
+        <div className="w-full max-w-sm"><SearchButton /></div>
+      </div>)}
+      <div className="flex min-h-0 min-w-0 flex-1">
         {showNav && (<>
             <div style={{ width: navCollapsed ? 48 : navWidth }} className="shrink-0 overflow-hidden transition-[width] duration-[var(--dur-slow)] ease-[var(--ease-out)]">
               <Sidebar collapsed={navCollapsed} onCollapse={toggleNav}/>
@@ -110,8 +118,6 @@ export function AppShell() {
           </Suspense>
         </main>
       </div>
-
-      <FloatingSearch />
 
       <Drawer open={navAsDrawer} onClose={() => toggleNavDrawer(false)} side="left" width={272} title={t("common.navigation")}>
         <Sidebar onCollapse={() => toggleNavDrawer(false)}/>
@@ -151,13 +157,12 @@ function MobileShell() {
         </div>
       </div>
 
-      <FloatingSearch compact/>
-
       <nav aria-label={t("shell.mobile_navigation")} className="flex h-[calc(56px+env(safe-area-inset-bottom))] shrink-0 items-stretch justify-around border-t border-[var(--border-subtle)] bg-[var(--bg-sunken)] pb-[env(safe-area-inset-bottom)]">
         {tabs.map((tab) => (<button key={tab.id} type="button" aria-current={pane === tab.id ? 'page' : undefined} onClick={() => setPane(tab.id)} className={cn('flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 text-[10px] transition-colors active:bg-[var(--bg-active)]', pane === tab.id ? 'text-[var(--accent)]' : 'text-[var(--text-quaternary)]')}>
             <span className={cn('mobile-tab-icon', pane === tab.id && 'is-active')}>{tab.icon}</span>
             {tab.label}
           </button>))}
+        <SearchButton variant="mobile" />
       </nav>
 
       <OverlayHost />
@@ -176,15 +181,16 @@ function WorkspaceFallback() {
 }
 
 function OverlayHost() {
+    const userId = useSession((s) => s.user?.id);
     const panel = useUi((s) => s.panel);
     const closePanel = useUi((s) => s.closePanel);
     const lightbox = useUi((s) => s.lightbox);
     const role = useSession((s) => s.user?.role);
     const updateDialogOpen = useUpdate((s) => s.dialogOpen);
     return (<>
+      {panel === 'settings' && <SettingsPanel key={userId} onClose={closePanel}/>}
       <Suspense fallback={null}>
         {panel === 'command' && <CommandPalette onClose={closePanel}/>}
-        {panel === 'settings' && <SettingsPanel onClose={closePanel}/>}
         {panel === 'shortcuts' && <ShortcutsPanel onClose={closePanel}/>}
         {panel === 'graph' && <GraphPanel onClose={closePanel}/>}
         {panel === 'share' && <SharePanel onClose={closePanel}/>}
