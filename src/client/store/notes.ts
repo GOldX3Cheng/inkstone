@@ -645,8 +645,10 @@ export const useNotes = create<NotesState>((set, get) => ({
         };
         const previousWorkspace = captureWorkspaceState();
         adoptNote(optimistic, set, get);
-        if (input?.open !== false)
+        if (input?.open !== false) {
             useUi.getState().setActiveNote(id);
+            useUi.getState().setMobilePane('editor');
+        }
         const request = api.notes.create({ id, title, content, folderId, ...(isStarred ? { isStarred: true } : {}) });
         pendingNoteCreates.set(id, request);
         try {

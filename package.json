@@ -18,6 +18,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:ai": "vite --mode ai",
     "dev:kv": "vite --mode kv",
     "dev:demo": "vite --mode demo",
     "build": "tsc -b && vite build",

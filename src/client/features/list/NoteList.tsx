@@ -8,7 +8,7 @@ import { fuzzyFilter, splitByRanges } from '../../lib/fuzzy';
 import { useBreakpoint } from '../../lib/hooks';
 import { prettyCombo } from '../../lib/hotkeys';
 import { exportNoteAsHtml, exportNoteAsMarkdown, exportNoteAsPdf } from '../../lib/export-note';
-import { IconButton } from '../../components/primitives';
+import { IconButton, Logo } from '../../components/primitives';
 import { Menu, Tooltip, confirm, useContextMenu, type MenuItem } from '../../components/overlay';
 import { Empty, NoteListSkeleton } from '../../components/feedback';
 import { useUi } from '../../store/ui';
@@ -16,6 +16,7 @@ import { createContextualNote, useNotes, useVisibleNotes } from '../../store/not
 import { folderPathLabel } from '../../lib/folders';
 import { FolderPicker } from '../folders/FolderPicker';
 import { t, useLocale, type MessageKey } from "../../lib/i18n";
+import { MobileLibraryFilters } from '../shell/MobileLibraryFilters';
 const VIEW_MESSAGE_KEYS: Record<ViewKind, MessageKey> = {
     all: 'navigation.all_notes',
     recent: 'navigation.recently_edited',
@@ -52,7 +53,7 @@ export function NoteList() {
     const openNote = useNotes((s) => s.openNote);
     const { emptyTrash, emptyingTrash } = useEmptyTrash();
     const [filter, setFilter] = useState('');
-    const deferredFilter = useDeferredValue(filter);
+    const deferredFilter = useDeferredValue(breakpoint === 'mobile' ? filter : '');
     const [sortMenuOpen, setSortMenuOpen] = useState(false);
     const sortButtonRef = useRef<HTMLButtonElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
@@ -61,7 +62,7 @@ export function NoteList() {
     const now = useNow();
     const tagColors = useMemo(() => new Map((tags ?? []).map((item) => [item.name, item.color])), [tags]);
 
-    useEffect(() => setFilter(''), [view, folderId, tag]);
+    useEffect(() => setFilter(''), [view, folderId, tag, breakpoint]);
     const title = useMemo(() => {
         if (view === 'folder')
             return (folderId ? folderPathLabel(folders, folderId) : '') || t("navigation.folder");
@@ -182,8 +183,9 @@ export function NoteList() {
             onSelect: () => useUi.getState().setDensity(density === 'comfortable' ? 'compact' : 'comfortable'),
         },
     ];
-    return (<section className="relative flex h-full min-h-0 flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-base)]">
+    return (<section className={cn('relative flex h-full min-h-0 flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-base)]', breakpoint === 'mobile' && 'mobile-note-list')}>
       <header className="shrink-0 px-3 pt-3 pb-2">
+        {breakpoint === 'mobile' && <div className="mobile-library-brand"><Logo size={22}/><span>{t('common.product_name')}</span></div>}
         <div className="mb-2.5 flex items-center justify-between gap-2">
           <div className="min-w-0">
             <h2 className="truncate text-[14.5px] font-semibold tracking-[-0.016em] text-[var(--text-primary)]">{title}</h2>
@@ -201,14 +203,14 @@ export function NoteList() {
               </IconButton>
             </Tooltip>
             {view !== 'trash' && view !== 'archived' && (<Tooltip label={t("common.new_note")} combo="mod+n">
-                <IconButton label={t("common.new_note")} size="sm" onClick={() => void createContextualNote()}>
+                <IconButton label={t("common.new_note")} size="sm" className={breakpoint === 'mobile' ? 'mobile-library-compose' : undefined} onClick={() => void createContextualNote()}>
                   <Plus size={15}/>
                 </IconButton>
               </Tooltip>)}
           </div>
         </div>
 
-        <div className="relative">
+        {breakpoint === 'mobile' && <div className="relative mobile-note-search">
           <Search size={13} className="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-[var(--text-quaternary)]"/>
           <input aria-label={t("notes.filter_in_this_view")} value={filter} onChange={(e) => setFilter(e.target.value)} onKeyDown={(e) => {
             if (e.key === 'Escape')
@@ -226,7 +228,9 @@ export function NoteList() {
                 <X size={12}/>
               </button>
             </Tooltip>)}
-        </div>
+        </div>}
+
+        {breakpoint === 'mobile' && <MobileLibraryFilters />}
 
         {view === 'trash' && notes.length > 0 && (<button type="button" disabled={emptyingTrash} aria-busy={emptyingTrash} onClick={() => void emptyTrash()} className="mt-2 w-full rounded-[var(--r-md)] border border-[var(--border-subtle)] py-1.5 text-[11.5px] text-[var(--text-tertiary)] transition-colors hover:border-[var(--danger)] hover:text-[var(--danger)] disabled:pointer-events-none disabled:opacity-50">{t("notes.empty_trash")}{notes.length}{t("notes.notes_93aeb9")}</button>)}
       </header>
