@@ -9,11 +9,11 @@ import type { EditorLayout } from '@shared/types';
 import { fullTime } from '../../lib/time';
 import { useBreakpoint, useRelativeTime } from '../../lib/hooks';
 import { prettyCombo } from '../../lib/hotkeys';
-import { IconButton } from '../../components/primitives';
+import { Button, IconButton } from '../../components/primitives';
 import { Drawer, Menu, Tooltip, type MenuItem } from '../../components/overlay';
 import { Segmented } from '../../components/form';
 import { EditorSkeleton, Empty } from '../../components/feedback';
-import { CodeEditor } from '../../editor/CodeEditor';
+import { DeferredCodeEditor } from '../../editor/CodeEditor';
 import { insertFiles } from '../../editor/paste';
 import { optimizeImageFile } from '../../lib/image';
 import { exportNoteAsHtml, exportNoteAsMarkdown, exportNoteAsPdf } from '../../lib/export-note';
@@ -40,6 +40,7 @@ export function Workspace({ onMobileBack, pane = 'active', grouped = false, }: {
     grouped?: boolean;
 } = {}) {
     const { note, content, loaded } = useActiveNote(pane);
+    const loadError = useNotes((s) => note ? s.noteLoadErrors[note.id] : undefined);
     const settings = useSession((s) => s.settings);
     const updateSettings = useSession((s) => s.updateSettings);
     const editContent = useNotes((s) => s.editContent);
@@ -205,8 +206,17 @@ export function Workspace({ onMobileBack, pane = 'active', grouped = false, }: {
     if (!note)
         return <NoNoteSelected onCreate={() => void createContextualNote()}/>;
     if (!loaded) {
-        return (<div className="h-full overflow-hidden bg-[var(--bg-editor)]" aria-busy="true" aria-label={t("workspace.loading_note_content")}>
-        <EditorSkeleton />
+        return (<div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[var(--bg-editor)]" aria-busy={!loadError}>
+        <header className="flex h-11 shrink-0 items-center gap-2 border-b border-[var(--border-subtle)] px-3">
+          {isMobile && onMobileBack && <IconButton label={t("workspace.back_to_notes")} size="sm" onClick={onMobileBack}><ArrowLeft size={16}/></IconButton>}
+          <span className="min-w-0 flex-1 truncate text-[14px] font-semibold">{note.title || t("common.untitled_note")}</span>
+          {grouped && pane === 'secondary' && <IconButton label={t("workspace.close_right_note")} size="sm" onClick={closeSecondaryNote}><X size={15}/></IconButton>}
+        </header>
+        <div role="status" className="flex items-center gap-3 px-5 py-4 text-[13px] text-[var(--text-secondary)]">
+          <span>{loadError || t("workspace.loading_note_content")}</span>
+          {loadError && <Button size="sm" variant="secondary" onClick={() => void useNotes.getState().openNote(note.id, pane === 'active' ? undefined : { pane, activate: paneActive })}>{t("common.retry")}</Button>}
+        </div>
+        {!loadError && <div className="min-h-0 flex-1 overflow-hidden"><EditorSkeleton /></div>}
       </div>);
     }
     const noteFolder = note.folderId ? folders.find((folder) => folder.id === note.folderId) ?? null : null;
@@ -415,7 +425,7 @@ export function Workspace({ onMobileBack, pane = 'active', grouped = false, }: {
 
       <div ref={containerRef} className={cn("flex min-h-0 flex-1", isMobile && "flex-col")} data-editor-layout={layout}>
         <div hidden={!showEditor} inert={!showEditor} className="min-h-0 min-w-0" style={{ width: layout === 'split' && !isMobile ? editorWidth : outlineVisible ? `calc(100% - ${OUTLINE_WIDTH}px)` : '100%', flex: isMobile ? 1 : undefined }}>
-            <CodeEditor key={note.id} value={content} noteTitle={note.title} live={layout === 'live'} onHeadings={setHeadings} onChange={onChange} settings={settings.editor} sources={sources} handlers={handlers} onReady={setView}/>
+            <DeferredCodeEditor key={note.id} visible={showEditor} value={content} noteTitle={note.title} live={layout === 'live'} onHeadings={setHeadings} onChange={onChange} settings={settings.editor} sources={sources} handlers={handlers} onReady={setView}/>
           </div>
 
         {layout === 'split' && !isMobile && (<SplitResizer label={t("workspace.resize_editor_and_preview_panes")} containerRef={containerRef} ratio={effectiveSplitRatio} onChange={(splitRatio) => setLayout({ splitRatio })} onReset={() => setLayout({ splitRatio: null })}/>)}

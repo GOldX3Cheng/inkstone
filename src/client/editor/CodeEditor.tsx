@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Annotation, Compartment, EditorState, type Extension } from '@codemirror/state';
 import { EditorView, drawSelection, dropCursor, keymap, lineNumbers, placeholder as placeholderExt, rectangularSelection, } from '@codemirror/view';
 import { foldGutter, indentOnInput, indentUnit, } from '@codemirror/language';
@@ -33,6 +33,14 @@ export interface CodeEditorProps {
     placeholder?: string;
     className?: string;
 }
+export function DeferredCodeEditor({ visible, ...props }: CodeEditorProps & { visible: boolean }) {
+    const [initialized, setInitialized] = useState(visible);
+    useEffect(() => {
+        if (visible) setInitialized(true);
+    }, [visible]);
+    // Preserve undo history across mode changes once editing has started.
+    return visible || initialized ? <CodeEditor {...props}/> : null;
+}
 export function CodeEditor({ value, live = false, noteTitle = '', onHeadings, onChange, settings, sources, handlers, onReady, onScroll, onCursorLine, placeholder = t("editor.start_writing"), className, }: CodeEditorProps) {
     const hostRef = useRef<HTMLDivElement>(null);
     const viewRef = useRef<EditorView | null>(null);
@@ -44,6 +52,7 @@ export function CodeEditor({ value, live = false, noteTitle = '', onHeadings, on
     const lineNumbersCompartment = useRef(new Compartment());
     const tabSizeCompartment = useRef(new Compartment());
     const placeholderCompartment = useRef(new Compartment());
+    const configuredDisplay = useRef({ live, lineNumbers: settings.lineNumbers });
 
     useEffect(() => {
         const host = hostRef.current;
@@ -148,6 +157,9 @@ export function CodeEditor({ value, live = false, noteTitle = '', onHeadings, on
     useEffect(() => {
         const view = viewRef.current;
         if (!view) return;
+        if (configuredDisplay.current.live === live && configuredDisplay.current.lineNumbers === settings.lineNumbers)
+            return;
+        configuredDisplay.current = { live, lineNumbers: settings.lineNumbers };
         view.dispatch({
             effects: lineNumbersCompartment.current.reconfigure(
                 settings.lineNumbers && !live

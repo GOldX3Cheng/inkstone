@@ -157,9 +157,8 @@ function MobileShell() {
       </div>
 
       <nav aria-label={t("shell.mobile_navigation")} className="mobile-bottom-nav flex h-[calc(64px+env(safe-area-inset-bottom))] shrink-0 items-stretch justify-around border-t border-[var(--border-subtle)] bg-[var(--bg-surface)] pb-[env(safe-area-inset-bottom)]">
-        {tabs.map((tab) => (<button key={tab.id} type="button" disabled={!activeNoteId && (tab.id === 'editor' || tab.id === 'preview')} aria-current={pane === tab.id ? 'page' : undefined} onClick={() => setPane(tab.id)} className={cn('flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 text-[12px] transition-colors active:bg-[var(--bg-active)] disabled:opacity-40', pane === tab.id ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)]')}>
-            <span className={cn('mobile-tab-icon', pane === tab.id && 'is-active')}>{tab.icon}</span>
-            {tab.label}
+        {tabs.map((tab) => (<button key={tab.id} type="button" disabled={!activeNoteId && (tab.id === 'editor' || tab.id === 'preview')} aria-current={pane === tab.id ? 'page' : undefined} onClick={() => setPane(tab.id)} className={cn('flex min-w-0 flex-1 items-center justify-center text-[12px] transition-colors disabled:opacity-40', pane === tab.id ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)]')}>
+            <span className="mobile-tab-content">{tab.icon}<span>{tab.label}</span></span>
           </button>))}
       </nav>
 
