@@ -14,20 +14,20 @@ export function MobileAccount() {
     const logout = useSession((s) => s.logout);
     const [section, setSection] = useState<SettingsSection | null>(null);
     const [loggingOut, setLoggingOut] = useState(false);
-    if (section) return <section className="flex h-full min-h-0 flex-col bg-[var(--bg-base)]">
-        <header className="flex min-h-14 shrink-0 items-center gap-2 border-b border-[var(--border-subtle)] px-2">
+    if (section) return <section className="mobile-settings-detail flex h-full min-h-0 flex-col bg-[var(--bg-surface)]">
+        <header className="relative flex min-h-14 shrink-0 items-center border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3">
             <button type="button" aria-label={t('mobile.back_to_account')} onClick={() => setSection(null)} className="flex size-11 items-center justify-center rounded-lg active:bg-[var(--bg-active)]"><ArrowLeft size={20}/></button>
-            <h1 className="text-base font-semibold">{SECTIONS.find((item) => item.id === section)?.label()}</h1>
+            <h1 className="pointer-events-none absolute inset-x-14 text-center text-[15px] font-semibold">{SECTIONS.find((item) => item.id === section)?.label()}</h1>
         </header>
-        <div className="min-h-0 flex-1 overflow-y-auto p-4">{section === 'appearance' ? <AppearanceSettings accents={ACCENTS}/> : <SettingsPage section={section}/>}</div>
+        <div className="mobile-settings-content min-h-0 flex-1 overflow-y-auto px-4 pt-4 pb-[calc(24px+env(safe-area-inset-bottom))]">{section === 'appearance' ? <AppearanceSettings accents={ACCENTS}/> : <SettingsPage section={section}/>}</div>
     </section>;
-    return <section className="flex h-full flex-col overflow-y-auto bg-[var(--bg-sunken)] p-4">
+    return <section className="flex h-full flex-col overflow-y-auto bg-[var(--bg-surface)] p-4">
         <h1 className="py-2 text-xl font-semibold">{t('mobile.account')}</h1>
         {user && <div className="flex items-center gap-4 py-6">
             <Avatar src={user.avatarUrl} name={user.name || user.username} size={56}/>
             <div className="min-w-0"><p className="truncate text-lg font-semibold">{user.name || user.username}</p><p className="truncate text-sm text-[var(--text-tertiary)]">@{user.username}</p></div>
         </div>}
-        <div className="shrink-0 divide-y divide-[var(--border-subtle)] overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)]">
+        <div className="shrink-0 divide-y divide-[var(--border-subtle)] overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-base)]">
             {SECTIONS.map((item) => <button key={item.id} type="button" onClick={() => { warmSettingsSection(item.id); setSection(item.id); }} className="flex min-h-14 w-full items-center gap-3 px-4 text-left text-sm active:bg-[var(--bg-active)]"><span aria-hidden="true" className="text-[var(--accent)]">{item.icon}</span><span className="flex-1">{item.label()}</span><ChevronRight size={16} aria-hidden="true" className="text-[var(--text-tertiary)]"/></button>)}
             <button type="button" onClick={() => useUi.getState().openPanel('graph')} className="flex min-h-14 w-full items-center gap-3 px-4 text-left text-sm active:bg-[var(--bg-active)]"><Waypoints size={16} aria-hidden="true"/><span className="flex-1">{t('common.graph')}</span><ChevronRight size={16} aria-hidden="true"/></button>
         </div>

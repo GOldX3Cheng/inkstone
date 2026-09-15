@@ -517,7 +517,7 @@
 }
 .mobile-library-dropdown section { margin-top: 0; }
 .mobile-note-list > header {
-  padding: 20px 20px 8px;
+  padding: 18px 20px 8px;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--bg-base);
 }
@@ -525,28 +525,36 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
   color: var(--text-secondary);
   font-family: var(--font-display, Georgia, serif);
   font-size: 15px;
   font-weight: 600;
 }
-.mobile-note-list > header h2 {
-  font-size: 28px;
-  line-height: 1.25;
-  font-weight: 700;
-  letter-spacing: -0.04em;
-}
-.mobile-note-list > header > .mb-2\.5 { margin-bottom: 16px; }
 .mobile-note-list > header button { min-width: 44px; min-height: 44px; }
+.mobile-library-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mobile-library-toolbar .mobile-note-search {
+  min-width: 0;
+  flex: 1;
+}
+.mobile-note-list > header .mobile-library-sort {
+  flex: 0 0 44px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+}
 .mobile-note-list > header .mobile-library-compose {
+  flex: 0 0 44px;
   border-radius: 14px;
   background: var(--accent);
   color: var(--accent-contrast);
-  margin-left: 4px;
 }
 .mobile-note-list > header .mobile-library-compose:active { background: var(--accent-hover); }
-.mobile-note-list > header .mobile-library-compose svg { width: 22px; height: 22px; }
 .mobile-note-search input {
   height: 44px;
   border-color: transparent;
@@ -606,6 +614,15 @@
   background: var(--border-default);
 }
 .mobile-library-dropdown button { min-height: 44px; }
+.mobile-settings-content .setting-row {
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  min-height: 50px;
+}
+.mobile-settings-content .setting-row > :last-child {
+  margin-left: auto;
+}
 .mobile-bottom-nav { padding-left: 12px; padding-right: 12px; }
 .mobile-tab-content {
   display: inline-flex;
@@ -624,8 +641,6 @@
 @media (max-height: 500px) {
   .mobile-note-list > header { padding-top: 8px; }
   .mobile-library-brand { display: none; }
-  .mobile-note-list > header h2 { font-size: 22px; }
-  .mobile-note-list > header > .mb-2\.5 { margin-bottom: 8px; }
 }
 .skeleton {
   background:
