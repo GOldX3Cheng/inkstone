@@ -1,0 +1,52 @@
+name: Purge Old Runs
+
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Delete workflow runs older than this many days'
+        required: false
+        default: '2'
+  schedule:
+    - cron: '37 1 * * *'   # daily 01:37 UTC (Beijing 09:37), after sync-deploy
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: purge-old-runs
+  cancel-in-progress: false
+
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete runs older than threshold
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DAYS: ${{ github.event.inputs.days || '2' }}
+        run: |
+          set -euo pipefail
+          cutoff=$(date -u -d "-${DAYS} days" +%Y-%m-%dT%H:%M:%SZ)
+          echo "Repo: ${{ github.repository }}"
+          echo "Deleting runs created before ${cutoff} (older than ${DAYS} days)"
+          deleted=0
+          # 只拉第 1 页：每删一条列表就前移，翻页会漏删
+          for round in $(seq 1 200); do
+            ids=$(gh api "repos/${{ github.repository }}/actions/runs?per_page=100&page=1" \
+                    --jq ".workflow_runs[] | select(.created_at < \"${cutoff}\") | .id")
+            [ -z "$ids" ] && break
+            round_deleted=0
+            for id in $ids; do
+              if gh api -X DELETE "repos/${{ github.repository }}/actions/runs/${id}" >/dev/null 2>&1; then
+                round_deleted=$((round_deleted+1))
+                deleted=$((deleted+1))
+              else
+                echo "  (skip ${id})"
+              fi
+            done
+            # 本轮一条都没删掉（权限/状态异常）→ 退出，避免死循环
+            [ "$round_deleted" -eq 0 ] && break
+          done
+          echo "Done. Deleted ${deleted} run(s) older than ${DAYS} days."
