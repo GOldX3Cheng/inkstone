@@ -1,0 +1,27 @@
+name: Keepalive
+
+# 公开仓库连续 60 天没有任何提交时，GitHub 会自动停用该仓库的全部定时 workflow，
+# 且无邮件、无失败记录 —— 自动化会静默失效。每周推一个空提交保活。
+on:
+  schedule:
+    - cron: '43 4 * * 1'   # 每周一 04:43 UTC（北京 12:43）
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keepalive
+  cancel-in-progress: false
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Empty commit to keep schedules alive
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --allow-empty -m "chore: keepalive [skip ci]"
+          git push
